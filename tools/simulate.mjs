@@ -169,7 +169,10 @@ function makeAp(spec, i) {
   };
 }
 
-let seq = 0;
+// Each run is a separate process, so a counter starting at 0 would make every
+// invocation look like a re-send of capture #1 and the server would collapse
+// them into one. Seed from the clock so consecutive runs are distinct captures.
+let seq = Math.floor(Date.now() / 1000) % 100000;
 
 async function sendCapture() {
   seq++;
