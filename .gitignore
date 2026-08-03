@@ -1,0 +1,12 @@
+node_modules/
+.vercel/
+.DS_Store
+
+# Local test-server database (regenerated on demand)
+server/data/*.db
+server/data/*.db-shm
+server/data/*.db-wal
+server/data/oui.csv
+
+# arduino-cli build output
+firmware/**/build/

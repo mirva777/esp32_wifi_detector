@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WiFi Scout</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">📡</span>
+    <div>
+      <h1>WiFi Scout</h1>
+      <p class="tagline">Passive 2.4 GHz access-point survey</p>
+    </div>
+  </div>
+  <div class="status">
+    <div id="devices" class="devices"></div>
+    <div class="live"><span id="dot" class="dot"></span><span id="livetext">connecting…</span></div>
+  </div>
+</header>
+
+<main>
+
+  <section class="cards" id="cards"></section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Channel occupancy</h2>
+      <span class="muted">2.4 GHz &middot; channels 1&ndash;13</span>
+    </div>
+    <div id="channels" class="channels"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Access points <span id="apcount" class="pill"></span></h2>
+      <div class="controls">
+        <input id="search" type="search" placeholder="Filter by SSID, vendor, model, BSSID…" spellcheck="false">
+        <select id="secfilter">
+          <option value="">All security</option>
+          <option value="open">Open only</option>
+          <option value="wep">WEP</option>
+          <option value="wpa1">WPA1</option>
+          <option value="wpa2">WPA2</option>
+          <option value="wpa3">WPA3</option>
+        </select>
+        <button id="purge" class="danger" title="Delete all stored data">Clear</button>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table id="aptable">
+        <thead>
+          <tr>
+            <th data-sort="rssi"       class="sortable num">Signal</th>
+            <th data-sort="ssid"       class="sortable">Network</th>
+            <th data-sort="vendor"     class="sortable">Vendor</th>
+            <th data-sort="model"      class="sortable">Router model</th>
+            <th data-sort="channel"    class="sortable num">Ch</th>
+            <th data-sort="generation" class="sortable">Wi-Fi</th>
+            <th data-sort="security"   class="sortable">Security</th>
+            <th data-sort="stations"   class="sortable num">Clients</th>
+            <th data-sort="uptime"     class="sortable num">AP uptime</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <p id="empty" class="empty">
+        No access points recorded yet.<br>
+        <span class="muted">Waiting for the first upload from an ESP32…</span>
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<aside id="drawer" class="drawer" hidden>
+  <div class="drawer-head">
+    <div>
+      <h2 id="d-ssid"></h2>
+      <p id="d-bssid" class="mono muted"></p>
+    </div>
+    <button id="closedrawer" aria-label="Close">&times;</button>
+  </div>
+  <div id="d-body" class="drawer-body"></div>
+</aside>
+<div id="scrim" class="scrim" hidden></div>
+
+<script src="/app.js"></script>
+</body>
+</html>

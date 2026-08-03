@@ -1,0 +1,16 @@
+{
+  "name": "esp32-wifi-scout",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ESP32 passive WiFi access-point survey with a web dashboard",
+  "scripts": {
+    "server": "node server/server.mjs",
+    "simulate": "node tools/simulate.mjs",
+    "fetch-oui": "node tools/fetch-oui.mjs",
+    "build": "arduino-cli compile --fqbn esp32:esp32:esp32 firmware/wifi_scout",
+    "flash": "tools/flash.sh",
+    "monitor": "tools/monitor.sh"
+  },
+  "engines": { "node": ">=22" }
+}

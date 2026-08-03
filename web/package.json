@@ -1,0 +1,13 @@
+{
+  "name": "wifi-scout-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dashboard and ingest API for the ESP32 WiFi Scout",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.0"
+  }
+}
