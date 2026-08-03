@@ -133,6 +133,31 @@ export function isLocallyAdministered(bssid) {
   return Number.isFinite(first) && (first & 0x02) !== 0;
 }
 
+/**
+ * A multi-SSID radio derives extra BSSIDs from its physical MAC, keeping the
+ * lower five octets and setting the locally-administered bit on the first. That
+ * makes them indistinguishable from a randomised MAC in isolation, so match
+ * them against the real BSSIDs in the same result set and inherit the vendor.
+ * Mutates and returns the rows.
+ */
+export function annotateVirtualBssids(rows) {
+  const byTail = new Map();
+  for (const r of rows) {
+    if (r.bssid && !isLocallyAdministered(r.bssid) && r.vendor) {
+      byTail.set(r.bssid.slice(3), r.vendor);      // last five octets
+    }
+  }
+  for (const r of rows) {
+    if (!r.bssid || !isLocallyAdministered(r.bssid)) continue;
+    const vendor = byTail.get(r.bssid.slice(3));
+    if (vendor) {
+      r.vendor = vendor;
+      r.virtual_bssid = true;
+    }
+  }
+  return rows;
+}
+
 export function lookupVendor(bssid) {
   if (!table) build(null);
   if (!bssid) return '';

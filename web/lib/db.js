@@ -5,7 +5,7 @@
 // classic pool would exhaust connection limits under bursty ingest.
 
 import { neon } from '@neondatabase/serverless';
-import { lookupVendor } from './oui.mjs';
+import { lookupVendor, annotateVirtualBssids } from './oui.mjs';
 
 let _sql = null;
 
@@ -250,7 +250,7 @@ export async function ingest(payload) {
 export async function listAps() {
   await ensureSchema();
   const rows = await sql().query('SELECT * FROM aps ORDER BY last_rssi DESC LIMIT 2000');
-  return rows.map((r) => ({
+  return annotateVirtualBssids(rows.map((r) => ({
     ...(r.detail || {}),
     bssid: r.bssid,
     ssid: r.ssid,
@@ -262,7 +262,7 @@ export async function listAps() {
     best_rssi: r.best_rssi,
     rssi: r.last_rssi,
     device_id: r.device_id,
-  }));
+  })));
 }
 
 export async function listDevices() {

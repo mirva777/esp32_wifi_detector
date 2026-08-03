@@ -188,7 +188,8 @@ function renderTable() {
         <div class="ssid ${ap.hidden ? 'hidden-net' : ''}">${ap.hidden ? '&lt;hidden&gt;' : esc(ap.ssid) || '&lt;unnamed&gt;'}</div>
         <div class="sub">${esc(ap.bssid)}</div>
       </td>
-      <td>${esc(ap.vendor) || '<span class="dash">—</span>'}</td>
+      <td>${esc(ap.vendor) || '<span class="dash">—</span>'}
+          ${ap.virtual_bssid ? '<div class="sub">virtual BSSID</div>' : ''}</td>
       <td>${modelCell(ap)}</td>
       <td class="num">${ap.channel || '—'}${width}</td>
 

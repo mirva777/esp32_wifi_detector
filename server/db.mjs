@@ -2,7 +2,7 @@
 
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
-import { lookupVendor } from '../web/lib/oui.mjs';
+import { lookupVendor, annotateVirtualBssids } from '../web/lib/oui.mjs';
 
 let db;
 
@@ -218,7 +218,7 @@ export function ingest(payload) {
 // ---------------------------------------------------------------------------
 export function listAps() {
   const rows = db.prepare('SELECT * FROM aps ORDER BY last_rssi DESC').all();
-  return rows.map((r) => ({
+  return annotateVirtualBssids(rows.map((r) => ({
     ...JSON.parse(r.detail || '{}'),
     bssid: r.bssid,
     ssid: r.ssid,
@@ -230,7 +230,7 @@ export function listAps() {
     best_rssi: r.best_rssi,
     rssi: r.last_rssi,
     device_id: r.device_id,
-  }));
+  })));
 }
 
 export function listDevices() {
