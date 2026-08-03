@@ -206,3 +206,9 @@ tbody td { padding: 9px 14px; vertical-align: middle; white-space: nowrap; }
   .controls input { min-width: 100%; }
   .channels { grid-template-columns: repeat(7, 1fr); }
 }
+
+/* Out-of-range access points stay listed, but their signal reading is a last
+   known value rather than a current one — so mute the row to say so. */
+tbody tr.gone { opacity: .45; }
+tbody tr.gone:hover { opacity: .75; background: var(--bg-3); }
+tbody tr.gone .sigbars i.on { background: var(--muted); }

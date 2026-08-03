@@ -136,15 +136,34 @@ function sortValue(ap, key) {
     case 'security':   return securityRank(ap);
     case 'stations':   return ap.load?.present ? (ap.load.stations ?? 0) : -1;
     case 'uptime':     return ap.beacon?.uptime_s ?? 0;
+    case 'lastseen':   return Number(ap.last_seen) || 0;
     default:           return 0;
   }
+}
+
+// An AP is "in range" if it appeared in the most recent scans. Anchoring to the
+// newest observation rather than wall-clock means the whole table does not grey
+// out just because the scout is unplugged — and it adapts to whatever scan
+// interval the device is configured with.
+const STALE_AFTER_MS = 3 * 60 * 1000;
+
+function latestObservation() {
+  return aps.reduce((max, ap) => Math.max(max, Number(ap.last_seen) || 0), 0);
+}
+
+function isGone(ap, latest) {
+  return latest - (Number(ap.last_seen) || 0) > STALE_AFTER_MS;
 }
 
 function visibleRows() {
   const q = $('#search').value.trim().toLowerCase();
   const sec = $('#secfilter').value;
+  const presence = $('#presence').value;
+  const latest = latestObservation();
 
   let rows = aps.filter((ap) => {
+    if (presence === 'live' && isGone(ap, latest)) return false;
+    if (presence === 'gone' && !isGone(ap, latest)) return false;
     if (q) {
       const hay = [
         ap.ssid, ap.bssid, ap.vendor,
@@ -178,11 +197,14 @@ function renderTable() {
   $('#apcount').textContent = `${rows.length} of ${aps.length}`;
   $('#empty').style.display = aps.length ? 'none' : 'block';
 
+  const latest = latestObservation();
+
   $('#tbody').innerHTML = rows.map((ap) => {
     const width = ap.bandwidth && ap.bandwidth > 20
       ? `<div class="sub">${ap.bandwidth} MHz</div>` : '';
     const stations = ap.load?.present ? ap.load.stations : null;
-    return `<tr data-bssid="${esc(ap.bssid)}">
+    const gone = isGone(ap, latest);
+    return `<tr data-bssid="${esc(ap.bssid)}" class="${gone ? 'gone' : ''}"
       <td class="num">${signalBars(ap.rssi ?? -100)}</td>
       <td>
         <div class="ssid ${ap.hidden ? 'hidden-net' : ''}">${ap.hidden ? '&lt;hidden&gt;' : esc(ap.ssid) || '&lt;unnamed&gt;'}</div>
@@ -197,6 +219,8 @@ function renderTable() {
       <td>${securityTag(ap)}${ap.wps?.active ? ' <span class="tag wps">WPS</span>' : ''}</td>
       <td class="num">${stations === null || stations < 0 ? '<span class="dash">—</span>' : stations}</td>
       <td class="num">${duration(ap.beacon?.uptime_s)}</td>
+      <td class="num">${relTime(Number(ap.last_seen))}
+          ${gone ? '<div class="sub">out of range</div>' : ''}</td>
     </tr>`;
   }).join('');
 
@@ -401,6 +425,7 @@ function connectLive() {
 // ---------------------------------------------------------------------------
 $('#search').addEventListener('input', renderTable);
 $('#secfilter').addEventListener('change', renderTable);
+$('#presence').addEventListener('change', renderTable);
 $('#closedrawer').addEventListener('click', closeDrawer);
 $('#scrim').addEventListener('click', closeDrawer);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });

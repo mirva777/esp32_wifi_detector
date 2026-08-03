@@ -40,6 +40,11 @@
       <h2>Access points <span id="apcount" class="pill"></span></h2>
       <div class="controls">
         <input id="search" type="search" placeholder="Filter by SSID, vendor, model, BSSID…" spellcheck="false">
+        <select id="presence">
+          <option value="">Seen ever</option>
+          <option value="live">In range now</option>
+          <option value="gone">Out of range</option>
+        </select>
         <select id="secfilter">
           <option value="">All security</option>
           <option value="open">Open only</option>
@@ -64,6 +69,7 @@
             <th data-sort="security"   class="sortable">Security</th>
             <th data-sort="stations"   class="sortable num">Clients</th>
             <th data-sort="uptime"     class="sortable num">AP uptime</th>
+            <th data-sort="lastseen"   class="sortable num">Last seen</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
