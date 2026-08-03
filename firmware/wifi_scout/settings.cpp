@@ -3,6 +3,7 @@
 
 #include <Preferences.h>
 #include <WiFi.h>
+#include <esp_mac.h>
 #include <string.h>
 
 Settings g_cfg;
@@ -15,9 +16,18 @@ static void copyInto(char* dst, size_t cap, const String& src) {
   dst[cap - 1] = '\0';
 }
 
+// Read straight from eFuse rather than via WiFi.macAddress(): the identity is
+// needed during settingsLoad() and the boot banner, both of which run before
+// the WiFi driver starts, where WiFi.macAddress() returns garbage.
+static void readMac(uint8_t mac[6]) {
+  if (esp_read_mac(mac, ESP_MAC_WIFI_STA) != ESP_OK) {
+    memset(mac, 0, 6);
+  }
+}
+
 String deviceMac() {
   uint8_t mac[6];
-  WiFi.macAddress(mac);
+  readMac(mac);
   char buf[18];
   snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X",
            mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -26,7 +36,7 @@ String deviceMac() {
 
 String deviceShortId() {
   uint8_t mac[6];
-  WiFi.macAddress(mac);
+  readMac(mac);
   char buf[5];
   snprintf(buf, sizeof(buf), "%02X%02X", mac[4], mac[5]);
   return String(buf);

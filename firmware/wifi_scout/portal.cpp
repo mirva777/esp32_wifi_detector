@@ -136,8 +136,25 @@ static void handleSave() {
     server.send(400, "text/plain", "Network name and server URL are required.");
     return;
   }
-  // Accept a bare host:port and normalise it to a URL.
-  if (!srv.startsWith("http://") && !srv.startsWith("https://")) srv = "http://" + srv;
+  // Accept a bare host:port and normalise it to a URL. A bare IPv4 literal is
+  // almost always the local test server on plain HTTP; a real hostname is a
+  // hosted dashboard, and those redirect plain HTTP to TLS.
+  if (!srv.startsWith("http://") && !srv.startsWith("https://")) {
+    bool lanHost = srv.startsWith("localhost");
+    if (!lanHost) {
+      int dots = 0;
+      bool digitsOnly = true, sawDigit = false;
+      for (int i = 0; i < (int)srv.length(); i++) {
+        char c = srv[i];
+        if (c == ':' || c == '/') break;          // stop at port or path
+        if (c == '.')                    dots++;
+        else if (c >= '0' && c <= '9')   sawDigit = true;
+        else                           { digitsOnly = false; break; }
+      }
+      lanHost = digitsOnly && sawDigit && dots == 3;
+    }
+    srv = (lanHost ? "http://" : "https://") + srv;
+  }
   while (srv.endsWith("/")) srv.remove(srv.length() - 1);
 
   strncpy(g_cfg.wifi_ssid, ssid.c_str(), sizeof(g_cfg.wifi_ssid) - 1);

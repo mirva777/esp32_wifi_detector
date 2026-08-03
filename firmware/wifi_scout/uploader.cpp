@@ -206,9 +206,7 @@ static bool joinNetwork() {
   return true;
 }
 
-static bool postJson(const String& body, int& httpCode) {
-  String url = String(g_cfg.server) + "/api/ingest";
-
+static bool postOnce(const String& url, const String& body, int& httpCode) {
   // Declared before `http` so it is destroyed *after* it — HTTPClient keeps a
   // reference to the client for the lifetime of the request.
   WiFiClientSecure tls;
@@ -243,6 +241,31 @@ static bool postJson(const String& body, int& httpCode) {
   }
   http.end();
   return good;
+}
+
+static bool postJson(const String& body, int& httpCode) {
+  String base = String(g_cfg.server);
+  if (postOnce(base + "/api/ingest", body, httpCode)) return true;
+
+  // Hosted dashboards answer plain HTTP with a permanent redirect to TLS, and
+  // an upload cannot follow that mid-request: the connection was opened without
+  // TLS. Retry over HTTPS, and if that works, rewrite the stored endpoint so
+  // every later cycle goes straight there.
+  bool redirected = (httpCode == 301 || httpCode == 302 ||
+                     httpCode == 307 || httpCode == 308);
+  if (redirected && base.startsWith("http://")) {
+    String upgraded = "https://" + base.substring(7);
+    Serial.printf("[up] %d redirect — retrying over TLS: %s\n",
+                  httpCode, upgraded.c_str());
+    if (postOnce(upgraded + "/api/ingest", body, httpCode)) {
+      strncpy(g_cfg.server, upgraded.c_str(), sizeof(g_cfg.server) - 1);
+      g_cfg.server[sizeof(g_cfg.server) - 1] = '\0';
+      settingsSave();
+      Serial.println(F("[up] endpoint upgraded to https and saved"));
+      return true;
+    }
+  }
+  return false;
 }
 
 UploadResult uploadResults(const SniffStats& st, uint32_t seq) {

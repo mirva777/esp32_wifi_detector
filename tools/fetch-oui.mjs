@@ -38,11 +38,19 @@ for (const line of text.split('\n')) {
   if (!m) continue;
   let name = (m[2] ? m[2].replace(/""/g, '"') : m[3] || '').trim();
   if (!name) continue;
-  // Trim the boilerplate suffixes that make the table column unreadable.
-  name = name
-    .replace(/[,.]?\s+(Inc|Corp|Corporation|Ltd|Limited|LLC|GmbH|Co|Company|S\.A|B\.V|A\/S|Pty|PLC)\.?$/i, '')
-    .replace(/\s+/g, ' ')
-    .slice(0, 48);
+  // Trim boilerplate suffixes that make the table column unreadable. Applied
+  // repeatedly because registrants stack them ("HUAWEI TECHNOLOGIES CO.,LTD"),
+  // and only ever at the end, so names like "Cisco Systems" are left alone.
+  name = name.replace(/\s+/g, ' ').trim();
+  let prev;
+  do {
+    prev = name;
+    name = name
+      .replace(/[\s,.]*\b(Inc|Corp|Corporation|Co|Company|Ltd|Limited|LLC|GmbH|AG|S\.?A|B\.?V|A\/S|Pty|PLC|SAS|SRL|Oy|AB)\b\.?,?$/i, '')
+      .trim();
+  } while (name !== prev && name.length > 2);
+  if (name.length < 2) name = (m[2] || m[3] || '').trim();   // do not over-trim
+  name = name.slice(0, 48);
   map[m[1].toUpperCase()] = name;
 }
 
