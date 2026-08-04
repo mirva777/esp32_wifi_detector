@@ -79,6 +79,24 @@ const FALLBACK = {
   '7CDFA1': 'Espressif', '140808': 'Espressif', 'B4E62D': 'Espressif', '8CAAB5': 'Espressif',
 };
 
+/**
+ * Trim stacked corporate suffixes so the dashboard column stays readable
+ * ("HUAWEI TECHNOLOGIES CO.,LTD" -> "HUAWEI TECHNOLOGIES"). Applied only at the
+ * end of the name, so "Cisco Systems" is left intact.
+ */
+export function normaliseVendorName(raw) {
+  let name = String(raw || '').replace(/\s+/g, ' ').trim();
+  const original = name;
+  let prev;
+  do {
+    prev = name;
+    name = name
+      .replace(/[\s,.]*\b(Inc|Corp|Corporation|Co|Company|Ltd|Limited|LLC|GmbH|AG|S\.?A|B\.?V|A\/S|Pty|PLC|SAS|SRL|Oy|AB)\b\.?,?$/i, '')
+      .trim();
+  } while (name !== prev && name.length > 2);
+  return (name.length < 2 ? original : name).slice(0, 48);
+}
+
 let table = null;
 let source = null;
 
@@ -93,7 +111,7 @@ function build(dataDir) {
         // MA-L,001122,Vendor Name,Address…   — the name may be quoted.
         const m = line.match(/^MA-L,([0-9A-Fa-f]{6}),(?:"((?:[^"]|"")*)"|([^,]*))/);
         if (!m) continue;
-        const name = (m[2] ? m[2].replace(/""/g, '"') : m[3] || '').trim();
+        const name = normaliseVendorName(m[2] ? m[2].replace(/""/g, '"') : m[3] || '');
         if (name) map[m[1].toUpperCase()] = name;
       }
       table = { ...FALLBACK, ...map };

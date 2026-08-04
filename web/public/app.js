@@ -204,7 +204,7 @@ function renderTable() {
       ? `<div class="sub">${ap.bandwidth} MHz</div>` : '';
     const stations = ap.load?.present ? ap.load.stations : null;
     const gone = isGone(ap, latest);
-    return `<tr data-bssid="${esc(ap.bssid)}" class="${gone ? 'gone' : ''}"
+    return `<tr data-bssid="${esc(ap.bssid)}" class="${gone ? 'gone' : ''}">
       <td class="num">${signalBars(ap.rssi ?? -100)}</td>
       <td>
         <div class="ssid ${ap.hidden ? 'hidden-net' : ''}">${ap.hidden ? '&lt;hidden&gt;' : esc(ap.ssid) || '&lt;unnamed&gt;'}</div>
@@ -227,6 +227,18 @@ function renderTable() {
   document.querySelectorAll('#tbody tr').forEach((tr) => {
     tr.addEventListener('click', () => openDrawer(tr.dataset.bssid));
   });
+
+  // A malformed row template (a dropped ">" swallows the first cell as an
+  // attribute) shifts every column under the wrong heading, which is easy to
+  // miss by eye. Fail loudly instead.
+  const firstRow = $('#tbody').firstElementChild;
+  if (firstRow) {
+    const head = document.querySelectorAll('#aptable thead th').length;
+    const body = firstRow.children.length;
+    if (head !== body) {
+      console.error(`Table column mismatch: ${head} headers vs ${body} cells — row markup is malformed.`);
+    }
+  }
 
   document.querySelectorAll('th.sortable').forEach((th) => {
     th.classList.toggle('sorted', th.dataset.sort === sortKey);
